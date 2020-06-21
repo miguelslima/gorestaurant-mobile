@@ -59,43 +59,41 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
-      const filterParam = {
-        category_like: selectedCategory,
-        name_like: searchValue || undefined,
-      };
+      const response = await api.get('foods', {
+        params: {
+          name_like: searchValue,
+          category_like: selectedCategory,
+        },
+      });
 
-      try {
-        const { data } = await api.get<Food[]>('/foods', {
-          params: filterParam,
-        });
-        const formattedFoods = data.map(food => {
-          return { ...food, formattedPrice: formatValue(food.price) };
-        });
-        setFoods(formattedFoods);
-      } catch (err) {
-        console.error(err);
-      }
+      const formattedFoods = response.data.map((arrayFoods: Food) => {
+        return {
+          ...arrayFoods,
+          formattedPrice: formatValue(arrayFoods.price),
+        };
+      });
+
+      setFoods(formattedFoods);
     }
 
     loadFoods();
-  }, [selectedCategory, searchValue]);
+  }, [searchValue, selectedCategory]);
 
   useEffect(() => {
     async function loadCategories(): Promise<void> {
-      try {
-        const { data } = await api.get<Category[]>('/categories');
-        setCategories(data);
-      } catch (err) {
-        console.error(err);
-      }
+      const response = await api.get('categories');
+
+      setCategories(response.data);
     }
 
     loadCategories();
   }, []);
 
   function handleSelectCategory(id: number): void {
-    setSearchValue('');
-    setSelectedCategory(id === selectedCategory ? undefined : id);
+    // Select / deselect category
+    id === selectedCategory
+      ? setSelectedCategory(undefined)
+      : setSelectedCategory(id);
   }
 
   return (
